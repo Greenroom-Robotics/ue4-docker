@@ -18,6 +18,8 @@ LINUX_BASE_IMAGES = {
     "cuda": "nvidia/cuda:{cuda}-devel-{ubuntu}",
 }
 
+DEFAULT_BASE_IMG_ORG = "nvidia"
+
 # The default ubuntu base to use
 DEFAULT_LINUX_VERSION = "ubuntu22.04"
 
@@ -226,6 +228,11 @@ class BuildConfiguration(object):
             "-isolation",
             default=None,
             help="Set the isolation mode to use for Windows containers (process or hyperv)",
+        )
+        parser.add_argument(
+            "-baseorg",
+            default=DEFAULT_BASE_IMG_ORG,
+            help=f"The Docker organisation to pull the base images from (defaults to '{DEFAULT_BASE_IMG_ORG}')",
         )
         parser.add_argument(
             "-basetag",
@@ -705,10 +712,7 @@ class BuildConfiguration(object):
             raise RuntimeError('tag suffix cannot begin with "opengl" or "cuda".')
 
         # Determine if we are building CUDA-enabled container images
-        self.cuda = None
         if self.args.cuda is not None:
-            # Verify that the specified CUDA version is valid
-            self.cuda = self.args.cuda if self.args.cuda != "" else DEFAULT_CUDA_VERSION
             # Use the appropriate base image for the specified CUDA version
             self.baseImage = LINUX_BASE_IMAGES["cuda"]
             self.prereqsTag = "cuda{cuda}-{ubuntu}"
@@ -717,7 +721,7 @@ class BuildConfiguration(object):
             self.prereqsTag = "opengl-{ubuntu}"
 
         self.baseImage = self.baseImage.format(
-            cuda=self.args.cuda, ubuntu=self.args.basetag
+            org=self.args.baseorg, cuda=self.args.cuda, ubuntu=self.args.basetag
         )
         self.prereqsTag = self.prereqsTag.format(
             cuda=self.args.cuda, ubuntu=self.args.basetag
