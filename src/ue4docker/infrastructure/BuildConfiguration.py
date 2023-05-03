@@ -14,16 +14,16 @@ DEFAULT_GIT_REPO = "https://github.com/EpicGames/UnrealEngine.git"
 # The base images for Linux containers
 LINUX_BASE_IMAGES = {
     "opengl": "{org}/opengl:1.0-glvnd-devel-{ubuntu}",
-    "cudagl": "{org}/cudagl:{cuda}-devel-{ubuntu}",
+    "cuda": "{org}/cuda:{cuda}-devel-{ubuntu}",
 }
 
 DEFAULT_BASE_IMG_ORG = "nvidia"
 
 # The default ubuntu base to use
-DEFAULT_LINUX_VERSION = "ubuntu18.04"
+DEFAULT_LINUX_VERSION = "ubuntu22.04"
 
 # The default CUDA version to use when `--cuda` is specified without a value
-DEFAULT_CUDA_VERSION = "11.4"
+DEFAULT_CUDA_VERSION = "12.1.1"
 
 # The default memory limit (in GB) under Windows
 DEFAULT_MEMORY_LIMIT = 10.0
@@ -703,16 +703,16 @@ class BuildConfiguration(object):
 
     def _generateLinuxConfig(self):
         # Verify that any user-specified tag suffix does not collide with our base tags
-        if self.suffix.startswith("opengl") or self.suffix.startswith("cudagl"):
-            raise RuntimeError('tag suffix cannot begin with "opengl" or "cudagl".')
+        if self.suffix.startswith("opengl") or self.suffix.startswith("cuda"):
+            raise RuntimeError('tag suffix cannot begin with "opengl" or "cuda".')
 
         # Determine if we are building CUDA-enabled container images
         if self.args.cuda is not None:
             # Verify that the specified CUDA version is valid
             self.cuda = self.args.cuda if self.args.cuda != "" else DEFAULT_CUDA_VERSION
             # Use the appropriate base image for the specified CUDA version
-            self.baseImage = LINUX_BASE_IMAGES["cudagl"]
-            self.prereqsTag = "cudagl{cuda}-{ubuntu}"
+            self.baseImage = LINUX_BASE_IMAGES["cuda"]
+            self.prereqsTag = "cuda{cuda}-{ubuntu}"
         else:
             self.baseImage = LINUX_BASE_IMAGES["opengl"]
             self.prereqsTag = "opengl-{ubuntu}"
