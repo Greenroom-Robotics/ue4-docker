@@ -4,9 +4,9 @@ ARG CONAN_VERSION="conan>=1.59.0,<2"
 {% if combine %}
 FROM source as conan
 {% else %}
-ARG NAMESPACE
-ARG TAG
-ARG PREREQS_TAG
+ARG NAMESPACE="{{ namespace }}"
+ARG TAG="{{ tag }}"
+ARG PREREQS_TAG="{{ prereqs_tag }}"
 FROM ${NAMESPACE}/ue4-source:${TAG}-${PREREQS_TAG} AS conan
 {% endif %}
 ARG UE4CLI_VERSION
@@ -18,6 +18,14 @@ USER root
 RUN pip3 install --upgrade pip setuptools wheel
 RUN pip3 install "$CONAN_VERSION" "$UE4CLI_VERSION" "$CONAN_UE4CLI_VERSION"
 USER ue4
+
+# Copy in UBT from minimal image, if present (required for `ue4 conan generate` to work on UE5)
+ARG UBT_DIR="/home/ue4/UnrealEngine/Engine/Binaries/DotNET"
+{% if combine %}
+COPY --from=minimal --chown=ue4:ue4 $UBT_DIR/UnrealBuildTool $UBT_DIR/UnrealBuildTool
+{% else %}
+COPY --from={{ namespace }}/ue4-minimal:{{ tag }}-{{ prereqs_tag }} --chown=ue4:ue4 $UBT_DIR/UnrealBuildTool $UBT_DIR/UnrealBuildTool
+{% endif %}
 
 # Extract the third-party library details from UBT
 RUN ue4 setroot /home/ue4/UnrealEngine
